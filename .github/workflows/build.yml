@@ -105,7 +105,7 @@ jobs:
         echo "=== Compiler Check ==="
         which ${GCC_PREFIX}-gcc || { echo "GCC not found!"; exit 1; }
         which ar || { echo "AR not found!"; exit 1; }
-        which ${GCC_PREFIX}-windres || { echo "windres not found!"; exit 1; }
+        which windres || { echo "windres not found!"; exit 1; }
         ${GCC_PREFIX}-gcc --version | head -2
         
         cd libxml2-2.9.2
