@@ -91,7 +91,7 @@ jobs:
         ls -la
         find . -maxdepth 2 -type d -name "libxml2*" | head -5
 
-    - name: Configure and Build Minimal libxml2
+        - name: Configure and Build Minimal libxml2
       shell: msys2 {0}
       run: |
         export WINLIBS_BIN="${{ steps.setup_toolchain.outputs.winlibs_path }}"
@@ -107,85 +107,9 @@ jobs:
         
         cd libxml2-2.9.2
         
-        echo "=== Generating config.h ==="
-        cat > config.h << 'CONFIGH_EOF'
-#define PACKAGE "libxml2"
-#define VERSION "2.9.2"
-#define LIBXML_VERSION 20902
-#define LIBXML_VERSION_STRING "2.9.2"
-#define HAVE_CTYPE_H 1
-#define HAVE_STDLIB_H 1
-#define HAVE_MALLOC_H 1
-#define HAVE_TIME_H 1
-#define HAVE_FCNTL_H 1
-#define HAVE_MATH_H 1
-#define HAVE_STAT_H 1
-#define HAVE__STAT 1
-#define HAVE__STATI64 1
-#define HAVE__FSTATI64 1
-#define HAVE_VSNPRINTF 1
-#define HAVE__VSNPRINTF 1
-#define HAVE_SNPRINTF 1
-#define HAVE_STRICMP 1
-#define HAVE_STRDUP 1
-#define HAVE_STRNDUP 1
-#define HAVE_STRERROR 1
-#define HAVE_FINITE 1
-#define HAVE_ISNAN 1
-#define HAVE_ISINF 1
-#define HAVE_LOCALTIME 1
-#define HAVE_GMTIME 1
-#define HAVE_GETTIMEOFDAY 1
-#define HAVE_FTIME 1
-#define HAVE_TIME 1
-#define HAVE_RAND 1
-#define HAVE_SRAND 1
-#define HAVE_GETENV 1
-#define HAVE_PUTENV 1
-#define HAVE_UNLINK 1
-#define WITHOUT_HTTP 1
-#define WITHOUT_FTP 1
-#define WITHOUT_C14N 1
-#define WITHOUT_CATALOG 1
-#define WITHOUT_DOCB 1
-#define WITHOUT_EXPR 1
-#define WITHOUT_ICONV 1
-#define WITHOUT_ICU 1
-#define WITHOUT_ISO8859X 1
-#define WITHOUT_PATTERN 1
-#define WITHOUT_PUSH 1
-#define WITHOUT_PYTHON 1
-#define WITHOUT_REGEXPS 1
-#define WITHOUT_SCHEMAS 1
-#define WITHOUT_SCHEMATRON 1
-#define WITHOUT_THREADS 1
-#define WITHOUT_THREAD_ALLOC 1
-#define WITHOUT_XINCLUDE 1
-#define WITHOUT_XPTR 1
-#define WITHOUT_MODULES 1
-#define WITHOUT_WRITER 1
-#define WITHOUT_ZLIB 1
-#define WITHOUT_LZMA 1
-#define LIBXML_READER_ENABLED 1
-#define _CRT_SECURE_NO_DEPRECATE 1
-#define _CRT_NONSTDC_NO_DEPRECATE 1
-#define WIN32 1
-#define _WINDOWS 1
-#define SIZEOF_INT 4
-#define SIZEOF_LONG 4
-#define SIZEOF_LONG_LONG 8
-#if defined(_WIN64)
-#define SIZEOF_VOIDP 8
-#else
-#define SIZEOF_VOIDP 4
-#endif
-#define XML_STATIC 1
-#define LIBXML_STATIC 1
-#define WITHOUT_TRIO 1
-CONFIGH_EOF
-        
-        echo "=== Copying custom Makefile ==="
+        echo "=== Copying config.h and Makefile ==="
         WORKSPACE_MSYS=$(cygpath -u "${{ github.workspace }}")
+        cp "$WORKSPACE_MSYS/.github/workflows/config.h" config.h
         cp "$WORKSPACE_MSYS/.github/workflows/libxml2-minimal.mingw" win32/Makefile
         
         cd win32
@@ -219,6 +143,7 @@ CONFIGH_EOF
         rm -f install/include/libxml/xmlwriter.h
         rm -f install/include/libxml/c14n.h
         rm -f install/include/libxml/xinclude.h
+        
         
         echo "=== Installed files ==="
         find install -type f | head -20
