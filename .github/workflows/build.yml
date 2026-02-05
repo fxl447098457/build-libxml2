@@ -122,7 +122,7 @@ jobs:
         
         echo "=== Building ==="
         make clean 2>/dev/null || true
-        make -j$(nproc)
+        make -f libxml2-minimal.mingw -j$(nproc)
         
         echo "=== Build output ==="
         ls -lh *.a
