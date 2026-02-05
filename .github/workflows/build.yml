@@ -26,7 +26,7 @@ jobs:
             toolchain_url: https://github.com/brechtsanders/winlibs_mingw/releases/download/9.3.0-7.0.0-sjlj-r3/winlibs-mingw-w64-i686-9.3.0-7.0.0-r3-sjlj.7z  
             cmake_generator: "MinGW Makefiles"
             artifact_name: libxml2-2.9.2-minimal-win32-gcc93-sjlj
-            extra_flags: "CFLAGS=-m32 CXXFLAGS=-m32"
+            extra_flags: "-m32"
             gcc_prefix: i686-w64-mingw32
           - arch: x64
             msystem: MINGW64
