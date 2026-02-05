@@ -1,4 +1,4 @@
-name: Build Minimal libxml2 v2.9.2 Windows (GCC 9.3 SJLJ)
+name: Build Minimal libxml2 v2.9.3 Windows (GCC 9.3 SJLJ)
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
         options: ['true', 'false']
 
 env:
-  LIBXML_VERSION: 2.9.2
+  LIBXML_VERSION: 2.9.3
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
             mingw_arch: i686
             toolchain_url: https://github.com/brechtsanders/winlibs_mingw/releases/download/9.3.0-7.0.0-sjlj-r3/winlibs-mingw-w64-i686-9.3.0-7.0.0-r3-sjlj.7z  
             cmake_generator: "MinGW Makefiles"
-            artifact_name: libxml2-2.9.2-minimal-win32-gcc93-sjlj
+            artifact_name: libxml2-2.9.3-minimal-win32-gcc93-sjlj
             extra_flags: "CFLAGS=-m32 CXXFLAGS=-m32"
             gcc_prefix: i686-w64-mingw32
           - arch: x64
@@ -33,7 +33,7 @@ jobs:
             mingw_arch: x86_64
             toolchain_url: https://github.com/brechtsanders/winlibs_mingw/releases/download/9.3.0-7.0.0-sjlj-r3/winlibs-mingw-w64-x86_64-9.3.0-7.0.0-r3-sjlj.7z  
             cmake_generator: "MinGW Makefiles"
-            artifact_name: libxml2-2.9.2-minimal-win64-gcc93-sjlj
+            artifact_name: libxml2-2.9.3-minimal-win64-gcc93-sjlj
             extra_flags: ""
             gcc_prefix: x86_64-w64-mingw32
 
@@ -88,7 +88,7 @@ jobs:
     - name: Download libxml2 Source
       shell: msys2 {0}
       run: |
-        curl -L -o libxml2.tar.gz "https://github.com/GNOME/libxml2/archive/refs/tags/v2.9.2.tar.gz"
+        curl -L -o libxml2.tar.gz "https://github.com/GNOME/libxml2/archive/refs/tags/v2.9.3.tar.gz"
         tar -xzf libxml2.tar.gz
         ls -la
         find . -maxdepth 2 -type d -name "libxml2*" | head -5
@@ -112,7 +112,7 @@ jobs:
         ${GCC_PREFIX}-gcc --version | head -2
         
         # 进入 libxml2 目录
-        cd libxml2-2.9.2
+        cd libxml2-2.9.3
         
         echo "=== Original Makefile.mingw backup ==="
         cp win32/Makefile.mingw win32/Makefile.mingw.orig
@@ -323,7 +323,7 @@ jobs:
         New-Item -ItemType Directory -Force -Path "$pkgName\include\libxml" | Out-Null
         
         # 复制库文件
-        $libSource = "libxml2-2.9.2\install\lib"
+        $libSource = "libxml2-2.9.3\install\lib"
         if (Test-Path $libSource) {
           Get-ChildItem -Path $libSource -Filter "*.a" | ForEach-Object {
             Copy-Item $_.FullName -Destination "$pkgName\lib\" -Force
@@ -331,7 +331,7 @@ jobs:
         }
         
         # 如果没找到，尝试 win32 目录
-        $altSource = "libxml2-2.9.2\win32"
+        $altSource = "libxml2-2.9.3\win32"
         if (-not (Test-Path "$pkgName\lib\*.a")) {
           Get-ChildItem -Path $altSource -Filter "*.a" -ErrorAction SilentlyContinue | ForEach-Object {
             Copy-Item $_.FullName -Destination "$pkgName\lib\" -Force
@@ -339,12 +339,12 @@ jobs:
         }
         
         # 复制头文件（方案B：保留 xmlreader.h 和 xpath.h）
-        $includeSource = "libxml2-2.9.2\install\include"
+        $includeSource = "libxml2-2.9.3\install\include"
         if (Test-Path $includeSource) {
           Copy-Item "$includeSource\*" -Destination "$pkgName\" -Recurse -Force
         } else {
           # 直接从头文件源复制，但保留 xpath.h 和 xmlreader.h
-          Copy-Item "libxml2-2.9.2\include\libxml\*.h" -Destination "$pkgName\include\libxml\" -Force
+          Copy-Item "libxml2-2.9.3\include\libxml\*.h" -Destination "$pkgName\include\libxml\" -Force
           # 删除网络相关头文件（不删除 xpath.h 和 xmlreader.h）
           $netHeaders = @("nanoftp.h", "nanohttp.h", "catalog.h", 
                          "schemasInternals.h", "xmlschemas.h", "xmlschemastypes.h",
@@ -360,7 +360,7 @@ jobs:
         # Minimal libxml2 Configuration - Scheme B (Reader API Enabled)
         
         ## 编译选项
-        - 版本: 2.9.2
+        - 版本: 2.9.3
         - 编译器: MinGW-w64 GCC 9.3.0 (SJLJ)
         - 架构: ${{ matrix.arch }}
         
@@ -499,7 +499,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: ./artifacts
-        pattern: libxml2-2.9.2-minimal-*-gcc93-sjlj
+        pattern: libxml2-2.9.3-minimal-*-gcc93-sjlj
         merge-multiple: true
 
     - name: Generate Checksums
@@ -521,7 +521,7 @@ jobs:
         tag_name: ${{ steps.get_tag.outputs.tag_name }}
         name: Minimal libxml2 ${{ env.LIBXML_VERSION }} Windows (GCC 9.3 SJLJ) ${{ steps.get_tag.outputs.tag_name }}
         body: |
-          ## 精简版 libxml2 2.9.2 Windows 静态库 (GCC 9.3 SJLJ) - 方案B
+          ## 精简版 libxml2 2.9.3 Windows 静态库 (GCC 9.3 SJLJ) - 方案B
           
           **保留 XmlTextReader 流式 API**，适合大文件处理，无网络功能。
           
