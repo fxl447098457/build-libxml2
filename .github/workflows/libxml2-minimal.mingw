@@ -1,0 +1,125 @@
+# Minimal libxml2 Makefile for MinGW - Scheme B: Reader API enabled
+CC = $(GCC_PREFIX)-gcc
+AR = ar
+WINDRES = $(GCC_PREFIX)-windres
+CFLAGS = -O2 -Wall -DWIN32 -D_WINDOWS -D_MBCS -D_LIB $(EXTRA_FLAGS)
+
+SRCDIR = ..
+W32DIR = .
+
+SOURCES = \
+	$(SRCDIR)/SAX.c \
+	$(SRCDIR)/entities.c \
+	$(SRCDIR)/encoding.c \
+	$(SRCDIR)/error.c \
+	$(SRCDIR)/parser.c \
+	$(SRCDIR)/parserInternals.c \
+	$(SRCDIR)/xmlIO.c \
+	$(SRCDIR)/globals.c \
+	$(SRCDIR)/hash.c \
+	$(SRCDIR)/list.c \
+	$(SRCDIR)/xmlmemory.c \
+	$(SRCDIR)/uri.c \
+	$(SRCDIR)/valid.c \
+	$(SRCDIR)/xlink.c \
+	$(SRCDIR)/HTMLparser.c \
+	$(SRCDIR)/HTMLtree.c \
+	$(SRCDIR)/debugXML.c \
+	$(SRCDIR)/tree.c \
+	$(SRCDIR)/dict.c \
+	$(SRCDIR)/xmlstring.c \
+	$(SRCDIR)/xmlregexp.c \
+	$(SRCDIR)/xmlunicode.c \
+	$(SRCDIR)/xmlreader.c \
+	$(SRCDIR)/relaxng.c \
+	$(SRCDIR)/xmlwriter.c \
+	$(SRCDIR)/legacy.c \
+	$(SRCDIR)/chvalid.c \
+	$(SRCDIR)/xpath.c \
+	$(SRCDIR)/xpointer.c
+
+OBJS = $(notdir $(SOURCES:.c=.o)) libxml2.res
+STATICLIB = libxml2.a
+
+INCS = -I$(SRCDIR)/include -I.
+
+DEFINES = \
+	-DLIBXML_STATIC \
+	-DHAVE_CTYPE_H \
+	-DHAVE_STDLIB_H \
+	-DHAVE_MALLOC_H \
+	-DHAVE_TIME_H \
+	-DHAVE_FCNTL_H \
+	-DHAVE_MATH_H \
+	-DHAVE_STAT_H \
+	-DHAVE__STAT \
+	-DHAVE__STATI64 \
+	-DHAVE__FSTATI64 \
+	-DHAVE_VSNPRINTF \
+	-DHAVE__VSNPRINTF \
+	-DHAVE_SNPRINTF \
+	-DHAVE_STRICMP \
+	-DHAVE_STRDUP \
+	-DHAVE_STRNDUP \
+	-DHAVE_STRERROR \
+	-DHAVE_FINITE \
+	-DHAVE_ISNAN \
+	-DHAVE_ISINF \
+	-DHAVE_LOCALTIME \
+	-DHAVE_GMTIME \
+	-DHAVE_GETTIMEOFDAY \
+	-DHAVE_FTIME \
+	-DHAVE_TIME \
+	-DHAVE_RAND \
+	-DHAVE_SRAND \
+	-DHAVE_GETENV \
+	-DHAVE_PUTENV \
+	-DHAVE_UNLINK \
+	-DWITHOUT_TRIO \
+	-D_CRT_SECURE_NO_DEPRECATE \
+	-D_CRT_NONSTDC_NO_DEPRECATE
+
+CFLAGS += $(DEFINES) \
+	-DWITHOUT_HTTP \
+	-DWITHOUT_FTP \
+	-DWITHOUT_C14N \
+	-DWITHOUT_CATALOG \
+	-DWITHOUT_DOCB \
+	-DWITHOUT_EXPR \
+	-DWITHOUT_ICONV \
+	-DWITHOUT_ICU \
+	-DWITHOUT_ISO8859X \
+	-DWITHOUT_PATTERN \
+	-DWITHOUT_PUSH \
+	-DWITHOUT_PYTHON \
+	-DWITHOUT_REGEXPS \
+	-DWITHOUT_SCHEMAS \
+	-DWITHOUT_SCHEMATRON \
+	-DWITHOUT_THREADS \
+	-DWITHOUT_THREAD_ALLOC \
+	-DWITHOUT_XINCLUDE \
+	-DWITHOUT_XPTR \
+	-DWITHOUT_MODULES \
+	-DWITHOUT_WRITER \
+	-DWITHOUT_ZLIB \
+	-DWITHOUT_LZMA \
+	-DLIBXML_READER_ENABLED
+
+%.o: $(SRCDIR)/%.c
+	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+
+libxml2.res: libxml2.rc
+	$(WINDRES) $< -O coff -o $@
+
+all: $(STATICLIB)
+
+$(STATICLIB): $(OBJS)
+	$(AR) rcs $@ $(OBJS)
+
+clean:
+	rm -f $(OBJS) $(STATICLIB)
+
+install: $(STATICLIB)
+	mkdir -p $(PREFIX)/lib $(PREFIX)/include/libxml
+	cp $(STATICLIB) $(PREFIX)/lib/
+	cp $(SRCDIR)/include/libxml/*.h $(PREFIX)/include/libxml/
