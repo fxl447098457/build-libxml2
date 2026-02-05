@@ -1,7 +1,7 @@
 # Minimal libxml2 Makefile for MinGW - Scheme B: Reader API enabled
 CC = $(GCC_PREFIX)-gcc
 AR = ar
-WINDRES = $(GCC_PREFIX)-windres
+WINDRES = windres
 CFLAGS = -O2 -Wall -DWIN32 -D_WINDOWS -D_MBCS -D_LIB $(EXTRA_FLAGS)
 
 SRCDIR = ..
