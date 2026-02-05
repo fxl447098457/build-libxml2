@@ -107,7 +107,7 @@ jobs:
         echo "=== Compiler Check ==="
         which ${GCC_PREFIX}-gcc || { echo "GCC not found!"; exit 1; }
         which ar || { echo "AR not found!"; exit 1; }
-        which ${GCC_PREFIX}-windres || { echo "windres not found!"; exit 1; }
+        which windres || { echo "windres not found!"; exit 1; }
         
         ${GCC_PREFIX}-gcc --version | head -2
         
@@ -125,7 +125,7 @@ jobs:
         
         CC = $(GCC_PREFIX)-gcc
         AR = ar
-        WINDRES = $(GCC_PREFIX)-windres
+        WINDRES = windres
         CFLAGS = -O2 -Wall -DWIN32 -D_WINDOWS -D_MBCS -D_LIB $(EXTRA_FLAGS)
         
         # 核心目录
