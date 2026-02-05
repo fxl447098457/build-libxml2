@@ -1,4 +1,4 @@
-name: Build Minimal libxml2 v2.9.3 Windows (GCC 9.3 SJLJ)
+name: Build Minimal libxml2 v2.9.2 Windows (GCC 9.3 SJLJ)
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
         options: ['true', 'false']
 
 env:
-  LIBXML_VERSION: 2.9.3
+  LIBXML_VERSION: 2.9.2
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
             mingw_arch: i686
             toolchain_url: https://github.com/brechtsanders/winlibs_mingw/releases/download/9.3.0-7.0.0-sjlj-r3/winlibs-mingw-w64-i686-9.3.0-7.0.0-r3-sjlj.7z  
             cmake_generator: "MinGW Makefiles"
-            artifact_name: libxml2-2.9.3-minimal-win32-gcc93-sjlj
+            artifact_name: libxml2-2.9.2-minimal-win32-gcc93-sjlj
             extra_flags: "CFLAGS=-m32 CXXFLAGS=-m32"
             gcc_prefix: i686-w64-mingw32
           - arch: x64
@@ -33,7 +33,7 @@ jobs:
             mingw_arch: x86_64
             toolchain_url: https://github.com/brechtsanders/winlibs_mingw/releases/download/9.3.0-7.0.0-sjlj-r3/winlibs-mingw-w64-x86_64-9.3.0-7.0.0-r3-sjlj.7z  
             cmake_generator: "MinGW Makefiles"
-            artifact_name: libxml2-2.9.3-minimal-win64-gcc93-sjlj
+            artifact_name: libxml2-2.9.2-minimal-win64-gcc93-sjlj
             extra_flags: ""
             gcc_prefix: x86_64-w64-mingw32
 
@@ -82,13 +82,11 @@ jobs:
         install: >-
           base-devel
           make
-          mingw-w64-${{ matrix.mingw_arch }}-cmake
-          mingw-w64-${{ matrix.mingw_arch }}-ninja
 
     - name: Download libxml2 Source
       shell: msys2 {0}
       run: |
-        curl -L -o libxml2.tar.gz "https://github.com/GNOME/libxml2/archive/refs/tags/v2.9.3.tar.gz"
+        curl -L -o libxml2.tar.gz "https://github.com/GNOME/libxml2/archive/refs/tags/v2.9.2.tar.gz"
         tar -xzf libxml2.tar.gz
         ls -la
         find . -maxdepth 2 -type d -name "libxml2*" | head -5
@@ -107,18 +105,94 @@ jobs:
         which ar || { echo "AR not found!"; exit 1; }
         ${GCC_PREFIX}-gcc --version | head -2
         
-        cd libxml2-2.9.3
+        cd libxml2-2.9.2
+        
+        echo "=== Generating config.h ==="
+        cat > config.h << 'CONFIGH_EOF'
+#define PACKAGE "libxml2"
+#define VERSION "2.9.2"
+#define LIBXML_VERSION 20902
+#define LIBXML_VERSION_STRING "2.9.2"
+#define HAVE_CTYPE_H 1
+#define HAVE_STDLIB_H 1
+#define HAVE_MALLOC_H 1
+#define HAVE_TIME_H 1
+#define HAVE_FCNTL_H 1
+#define HAVE_MATH_H 1
+#define HAVE_STAT_H 1
+#define HAVE__STAT 1
+#define HAVE__STATI64 1
+#define HAVE__FSTATI64 1
+#define HAVE_VSNPRINTF 1
+#define HAVE__VSNPRINTF 1
+#define HAVE_SNPRINTF 1
+#define HAVE_STRICMP 1
+#define HAVE_STRDUP 1
+#define HAVE_STRNDUP 1
+#define HAVE_STRERROR 1
+#define HAVE_FINITE 1
+#define HAVE_ISNAN 1
+#define HAVE_ISINF 1
+#define HAVE_LOCALTIME 1
+#define HAVE_GMTIME 1
+#define HAVE_GETTIMEOFDAY 1
+#define HAVE_FTIME 1
+#define HAVE_TIME 1
+#define HAVE_RAND 1
+#define HAVE_SRAND 1
+#define HAVE_GETENV 1
+#define HAVE_PUTENV 1
+#define HAVE_UNLINK 1
+#define WITHOUT_HTTP 1
+#define WITHOUT_FTP 1
+#define WITHOUT_C14N 1
+#define WITHOUT_CATALOG 1
+#define WITHOUT_DOCB 1
+#define WITHOUT_EXPR 1
+#define WITHOUT_ICONV 1
+#define WITHOUT_ICU 1
+#define WITHOUT_ISO8859X 1
+#define WITHOUT_PATTERN 1
+#define WITHOUT_PUSH 1
+#define WITHOUT_PYTHON 1
+#define WITHOUT_REGEXPS 1
+#define WITHOUT_SCHEMAS 1
+#define WITHOUT_SCHEMATRON 1
+#define WITHOUT_THREADS 1
+#define WITHOUT_THREAD_ALLOC 1
+#define WITHOUT_XINCLUDE 1
+#define WITHOUT_XPTR 1
+#define WITHOUT_MODULES 1
+#define WITHOUT_WRITER 1
+#define WITHOUT_ZLIB 1
+#define WITHOUT_LZMA 1
+#define LIBXML_READER_ENABLED 1
+#define _CRT_SECURE_NO_DEPRECATE 1
+#define _CRT_NONSTDC_NO_DEPRECATE 1
+#define WIN32 1
+#define _WINDOWS 1
+#define SIZEOF_INT 4
+#define SIZEOF_LONG 4
+#define SIZEOF_LONG_LONG 8
+#if defined(_WIN64)
+#define SIZEOF_VOIDP 8
+#else
+#define SIZEOF_VOIDP 4
+#endif
+#define XML_STATIC 1
+#define LIBXML_STATIC 1
+#define WITHOUT_TRIO 1
+CONFIGH_EOF
         
         echo "=== Copying custom Makefile ==="
-        # 🔧 修复：使用 cygpath 转换路径，或者直接用相对路径
         WORKSPACE_MSYS=$(cygpath -u "${{ github.workspace }}")
-        cp "$WORKSPACE_MSYS/.github/workflows/libxml2-minimal.mingw" win32/Makefile.mingw
+        cp "$WORKSPACE_MSYS/.github/workflows/libxml2-minimal.mingw" win32/Makefile
         
         cd win32
         
         export EXTRA_FLAGS="${{ matrix.extra_flags }} -DNDEBUG"
         export PREFIX=$(cygpath -u "$PWD/../install")
-        cp "$WORKSPACE_MSYS/.github/workflows/libxml2-minimal.mingw" Makefile
+        
         echo "=== Building ==="
         make clean 2>/dev/null || true
         make -j$(nproc)
@@ -131,6 +205,7 @@ jobs:
         
         cd ..
         cp include/libxml/*.h install/include/libxml/
+        cp config.h install/include/libxml/
         
         rm -f install/include/libxml/nanoftp.h
         rm -f install/include/libxml/nanohttp.h
@@ -145,15 +220,8 @@ jobs:
         rm -f install/include/libxml/c14n.h
         rm -f install/include/libxml/xinclude.h
         
-        
-        # 方案B：保留 xmlreader.h 和 xpath.h（xpath.h 提供 xmlreader 需要的类型）
-        # 注意：不删除 xpath.h 和 xmlreader.h
-        
-        echo "=== Installed files (Scheme B) ==="
+        echo "=== Installed files ==="
         find install -type f | head -20
-        echo "=== Verifying Reader header exists ==="
-        ls -la install/include/libxml/xmlreader.h || echo "ERROR: xmlreader.h missing!"
-        ls -la install/include/libxml/xpath.h || echo "ERROR: xpath.h missing!"
 
     - name: Package Artifacts
       shell: pwsh
@@ -162,129 +230,70 @@ jobs:
         New-Item -ItemType Directory -Force -Path "$pkgName\lib" | Out-Null
         New-Item -ItemType Directory -Force -Path "$pkgName\include\libxml" | Out-Null
         
-        # 复制库文件
-        $libSource = "libxml2-2.9.3\install\lib"
+        $libSource = "libxml2-2.9.2\install\lib"
         if (Test-Path $libSource) {
           Get-ChildItem -Path $libSource -Filter "*.a" | ForEach-Object {
             Copy-Item $_.FullName -Destination "$pkgName\lib\" -Force
           }
         }
         
-        # 如果没找到，尝试 win32 目录
-        $altSource = "libxml2-2.9.3\win32"
         if (-not (Test-Path "$pkgName\lib\*.a")) {
-          Get-ChildItem -Path $altSource -Filter "*.a" -ErrorAction SilentlyContinue | ForEach-Object {
+          Get-ChildItem -Path "libxml2-2.9.2\win32" -Filter "*.a" -ErrorAction SilentlyContinue | ForEach-Object {
             Copy-Item $_.FullName -Destination "$pkgName\lib\" -Force
           }
         }
         
-        # 复制头文件（方案B：保留 xmlreader.h 和 xpath.h）
-        $includeSource = "libxml2-2.9.3\install\include"
+        $includeSource = "libxml2-2.9.2\install\include"
         if (Test-Path $includeSource) {
           Copy-Item "$includeSource\*" -Destination "$pkgName\" -Recurse -Force
-        } else {
-          # 直接从头文件源复制，但保留 xpath.h 和 xmlreader.h
-          Copy-Item "libxml2-2.9.3\include\libxml\*.h" -Destination "$pkgName\include\libxml\" -Force
-          # 删除网络相关头文件（不删除 xpath.h 和 xmlreader.h）
-          $netHeaders = @("nanoftp.h", "nanohttp.h", "catalog.h", 
-                         "schemasInternals.h", "xmlschemas.h", "xmlschemastypes.h",
-                         "schematron.h", "relaxng.h", "xmlwriter.h", "c14n.h", "xinclude.h")
-          foreach ($h in $netHeaders) {
-            $path = "$pkgName\include\libxml\$h"
-            if (Test-Path $path) { Remove-Item $path -Force }
-          }
         }
         
-        # 创建配置说明
         $configInfo = @"
-        # Minimal libxml2 Configuration - Scheme B (Reader API Enabled)
-        
-        ## 编译选项
-        - 版本: 2.9.3
-        - 编译器: MinGW-w64 GCC 9.3.0 (SJLJ)
-        - 架构: ${{ matrix.arch }}
-        
-        ## 禁用的功能 (节省空间，提高安全性)
-        - ❌ HTTP/FTP 网络支持 (nanohttp, nanoftp)
-        - ❌ XML Schemas/RelaxNG 验证
-        - ❌ XInclude 文件包含
-        - ❌ Canonical XML (C14N)
-        - ❌ Catalog 支持
-        - ❌ XML Writer
-        - ❌ XPath 表达式求值 (保留头文件类型定义，但无运行时功能)
-        - ❌ XPointer
-        - ❌ 正则表达式支持
-        - ❌ 线程支持
-        - ❌ 动态模块加载
-        - ❌ Zlib/LZMA 压缩
-        
-        ## 保留的核心功能
-        - ✅ XML/SAX2 解析
-        - ✅ DOM Tree 操作
-        - ✅ XmlTextReader (流式游标 API) - 推荐用于大文件
-        - ✅ 本地文件 I/O
-        - ✅ 字符编码转换 (内置)
-        - ✅ HTML 解析器 (简化版)
-        - ✅ 基础 DTD 验证
-        
-        ## 使用示例 - Reader API (推荐)
-        ```c
-        #include <libxml/xmlreader.h>
-        #define LIBXML_STATIC
-        
-        int main() {
-            xmlTextReaderPtr reader = xmlReaderForFile("bigfile.xml", NULL, 0);
-            if (reader) {
-                while (xmlTextReaderRead(reader) == 1) {
-                    int type = xmlTextReaderNodeType(reader);
-                    const xmlChar *name = xmlTextReaderConstName(reader);
-                    // 处理节点...
-                }
-                xmlFreeTextReader(reader);
-            }
-            xmlCleanupParser();
-            return 0;
-        }
-        ```
-        
-        ## 使用示例 - DOM API (小文件)
-        ```c
-        #include <libxml/parser.h>
-        #include <libxml/tree.h>
-        #define LIBXML_STATIC
-        
-        int main() {
-            xmlDocPtr doc = xmlReadFile("config.xml", NULL, 0);
-            if (doc) {
-                xmlNodePtr root = xmlDocGetRootElement(doc);
-                // 遍历 DOM 树...
-                xmlFreeDoc(doc);
-            }
-            xmlCleanupParser();
-            return 0;
-        }
-        ```
-        
-        ## 链接选项
-        `-lxml2 -lws2_32 -luser32`
-        或静态链接: `-L. -lxml2 -lws2_32 -luser32`
-        "@
+Minimal libxml2 Configuration - Scheme B (Reader API Enabled)
+
+Compile Options:
+- Version: 2.9.2
+- Compiler: MinGW-w64 GCC 9.3.0 (SJLJ)
+- Architecture: ${{ matrix.arch }}
+
+Disabled Features:
+- HTTP/FTP network support
+- XML Schema/RelaxNG validation
+- XInclude file inclusion
+- Canonical XML (C14N)
+- XML Catalog support
+- XML Writer API
+- XPath expression evaluation (headers only)
+- XPointer
+- Regular expression support
+- Thread support
+- Dynamic module loading
+- Zlib/LZMA compression
+
+Enabled Core Features:
+- XmlTextReader (streaming cursor API)
+- XML/SAX2 parser
+- DOM Tree operations
+- Local file I/O
+- Character encoding conversion
+- HTML parser (simplified)
+- Basic DTD validation
+
+Link Options:
+-lxml2 -lws2_32 -luser32
+"@
         
         $configInfo | Out-File -Encoding utf8 -FilePath "$pkgName\CONFIG.txt"
         
-        # 创建构建信息
-        $buildInfo = "Minimal libxml2 ${{ env.LIBXML_VERSION }} ${{ matrix.arch }} (Reader API Enabled)`n" +
-                     "Compiler: MinGW-w64 GCC 9.3.0 (SJLJ Exception Model)`n" +
-                     "Toolchain: winlibs 9.3.0-7.0.0-r3`n" +
+        $buildInfo = "Minimal libxml2 ${{ env.LIBXML_VERSION }} ${{ matrix.arch }}`n" +
+                     "Compiler: MinGW-w64 GCC 9.3.0 (SJLJ)`n" +
                      "Build Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')`n" +
-                     "Architecture: ${{ matrix.arch }}`n" +
-                     "Features: XML Reader (streaming), DOM, no network, no XPath eval"
+                     "Features: XML Reader (streaming), DOM, no network"
         $buildInfo | Out-File -Encoding utf8 -FilePath "$pkgName\BUILD_INFO.txt"
         
         Write-Host "=== Package Contents ==="
         Get-ChildItem "$pkgName" -Recurse | Select-Object FullName, Length
         
-        # 打包
         7z a "${pkgName}.7z" "$pkgName\" -mx=9
         Compress-Archive -Path "$pkgName" -DestinationPath "${pkgName}.zip" -CompressionLevel Optimal
 
@@ -308,11 +317,10 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
 
-    # 🔧 修复：创建 tag 的步骤需要在本 job 中，而不是依赖 env.RELEASE_TAG
     - name: Create Tag for Manual Release
       if: github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true'
       shell: bash
-      id: create_tag  # 🔧 添加 id 以便后续引用
+      id: create_tag
       run: |
         TAG_NAME="libxml-minimal-$(date +%Y%m%d-%H%M%S)"
         git config user.name "github-actions[bot]"
@@ -320,18 +328,14 @@ jobs:
         git tag "$TAG_NAME"
         git push origin "$TAG_NAME"
         echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-        echo "Created tag: $TAG_NAME"
 
-    # 🔧 修复：使用 steps.create_tag.outputs.tag_name 而不是 env.RELEASE_TAG
     - name: Determine Release Tag
       id: get_tag
       shell: bash
       run: |
         if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ github.event.inputs.create_release }}" == "true" ]; then
-          # 手动触发：使用刚创建的 tag
           echo "tag_name=${{ steps.create_tag.outputs.tag_name }}" >> $GITHUB_OUTPUT
         else
-          # tag 触发：使用当前 ref
           echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
         fi
 
@@ -339,7 +343,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: ./artifacts
-        pattern: libxml2-2.9.3-minimal-*-gcc93-sjlj
+        pattern: libxml2-2.9.2-minimal-*-gcc93-sjlj
         merge-multiple: true
 
     - name: Generate Checksums
@@ -357,66 +361,42 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        # 🔧 修复：使用 steps.get_tag.outputs.tag_name 而不是 env.RELEASE_TAG
         tag_name: ${{ steps.get_tag.outputs.tag_name }}
         name: Minimal libxml2 ${{ env.LIBXML_VERSION }} Windows (GCC 9.3 SJLJ) ${{ steps.get_tag.outputs.tag_name }}
         body: |
-          ## 精简版 libxml2 2.9.3 Windows 静态库 (GCC 9.3 SJLJ) - 方案B
+          ## Minimal libxml2 2.9.2 Windows Static Library (GCC 9.3 SJLJ)
           
-          **保留 XmlTextReader 流式 API**，适合大文件处理，无网络功能。
+          **XmlTextReader streaming API enabled**, no network functions.
           
-          ### 编译器信息
-          - **版本**: MinGW-w64 GCC 9.3.0 (winlibs 9.3.0-7.0.0-r3)
-          - **异常处理**: SJLJ (SetJump/LongJump)
-          - **架构**: x86 / x64
+          ### Compiler Info
+          - Version: MinGW-w64 GCC 9.3.0 (winlibs 9.3.0-7.0.0-r3)
+          - Exception: SJLJ (SetJump/LongJump)
+          - Architectures: x86 / x64
           
-          ### 功能裁剪说明
-          **已移除（减小体积，提高安全性）:**
-          - ❌ HTTP/FTP 网络客户端代码
-          - ❌ XML Schema/RelaxNG 验证
-          - ❌ XInclude 文件包含
-          - ❌ Canonical XML (C14N)
-          - ❌ XML Catalog 支持
-          - ❌ XML Writer API
-          - ❌ XPath 表达式求值 (保留头文件类型定义，运行时不可用)
-          - ❌ XPointer
-          - ❌ 正则表达式 (pattern)
-          - ❌ 线程支持 (threads)
-          - ❌ 动态模块加载 (modules)
-          - ❌ Zlib/LZMA 压缩支持
+          ### Features
+          **Removed:**
+          - HTTP/FTP network client
+          - XML Schema/RelaxNG validation
+          - XInclude file inclusion
+          - Canonical XML (C14N)
+          - XML Catalog support
+          - XML Writer API
+          - XPath expression evaluation
+          - XPointer
+          - Regular expressions
+          - Thread support
+          - Dynamic module loading
+          - Zlib/LZMA compression
           
-          **保留的核心功能:**
-          - ✅ **XmlTextReader** - 流式游标 API（内存高效，推荐用于大文件）
-          - ✅ XML/SAX2 解析器
-          - ✅ DOM Tree 操作
-          - ✅ 本地文件读写
-          - ✅ 字符编码处理
-          - ✅ HTML 解析器 (简化)
-          - ✅ 基础 DTD 验证
+          **Kept:**
+          - XmlTextReader (streaming cursor API)
+          - XML/SAX2 parser
+          - DOM Tree operations
+          - Local file I/O
           
-          ### 使用示例 - Reader API (流式，推荐)
-          ```c
-          #include <libxml/xmlreader.h>
-          #define LIBXML_STATIC
+          **Link:** `-lxml2 -lws2_32 -luser32`
           
-          int main() {
-              xmlTextReaderPtr reader = xmlReaderForFile("bigfile.xml", NULL, 0);
-              if (reader) {
-                  while (xmlTextReaderRead(reader) == 1) {
-                      int type = xmlTextReaderNodeType(reader);
-                      const xmlChar *name = xmlTextReaderConstName(reader);
-                      printf("Node: %s, Type: %d\n", name, type);
-                  }
-                  xmlFreeTextReader(reader);
-              }
-              xmlCleanupParser();
-              return 0;
-          }
-          ```
-          
-          **链接选项:** `-lxml2 -lws2_32 -luser32`
-          
-          ### SHA256 校验和
+          ### SHA256 Checksums
           ```
           ${{ steps.checksums.outputs.content }}
           ```
