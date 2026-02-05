@@ -106,7 +106,7 @@ jobs:
         # 验证编译器
         echo "=== Compiler Check ==="
         which ${GCC_PREFIX}-gcc || { echo "GCC not found!"; exit 1; }
-        which ${GCC_PREFIX}-ar || { echo "AR not found!"; exit 1; }
+        which ar || { echo "AR not found!"; exit 1; }
         which ${GCC_PREFIX}-windres || { echo "windres not found!"; exit 1; }
         
         ${GCC_PREFIX}-gcc --version | head -2
@@ -124,7 +124,7 @@ jobs:
         # Streaming XML reader available, no network, no XPath expression evaluation
         
         CC = $(GCC_PREFIX)-gcc
-        AR = $(GCC_PREFIX)-ar
+        AR = ar
         WINDRES = $(GCC_PREFIX)-windres
         CFLAGS = -O2 -Wall -DWIN32 -D_WINDOWS -D_MBCS -D_LIB $(EXTRA_FLAGS)
         
