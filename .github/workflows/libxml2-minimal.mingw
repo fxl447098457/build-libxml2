@@ -41,8 +41,7 @@ SOURCES = \
 OBJS = $(notdir $(SOURCES:.c=.o))
 STATICLIB = libxml2.a
 
-INCS = -I$(SRCDIR)/include -I.
-
+INCS = -I$(SRCDIR)/include -I. -I$(SRCDIR)
 DEFINES = \
 	-DLIBXML_STATIC \
 	-DHAVE_CTYPE_H \
