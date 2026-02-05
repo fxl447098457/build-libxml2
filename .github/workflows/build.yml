@@ -119,10 +119,10 @@ jobs:
         
         export EXTRA_FLAGS="${{ matrix.extra_flags }} -DNDEBUG"
         export PREFIX=$(cygpath -u "$PWD/../install")
-        
+        cp "$WORKSPACE_MSYS/.github/workflows/libxml2-minimal.mingw" Makefile
         echo "=== Building ==="
         make clean 2>/dev/null || true
-        make -f libxml2-minimal.mingw -j$(nproc)
+        make -j$(nproc)
         
         echo "=== Build output ==="
         ls -lh *.a
