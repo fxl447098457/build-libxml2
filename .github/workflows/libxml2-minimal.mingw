@@ -1,7 +1,7 @@
 # Minimal libxml2 Makefile for MinGW - Scheme B: Reader API enabled
 CC = $(GCC_PREFIX)-gcc
 AR = ar
-WINDRES = windres
+
 CFLAGS = -O2 -Wall -DWIN32 -D_WINDOWS -D_MBCS -D_LIB $(EXTRA_FLAGS)
 
 SRCDIR = ..
@@ -38,7 +38,7 @@ SOURCES = \
 	$(SRCDIR)/xpath.c \
 	$(SRCDIR)/xpointer.c
 
-OBJS = $(notdir $(SOURCES:.c=.o)) libxml2.res
+OBJS = $(notdir $(SOURCES:.c=.o))
 STATICLIB = libxml2.a
 
 INCS = -I$(SRCDIR)/include -I.
@@ -107,10 +107,6 @@ CFLAGS += $(DEFINES) \
 
 %.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
-
-# 🔧 修复：明确指定 libxml2.rc 在当前目录（win32）
-libxml2.res: libxml2.rc
-	$(WINDRES) $< -O coff -o $@
 
 all: $(STATICLIB)
 
