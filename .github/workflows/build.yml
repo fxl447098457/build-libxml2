@@ -108,7 +108,7 @@ jobs:
         which windres || { echo "windres not found!"; exit 1; }
         ${GCC_PREFIX}-gcc --version | head -2
         
-        cd libxml2-2.9.2
+        cd libxml2-2.9.3
         
         echo "=== Copying custom Makefile ==="
         # 🔧 修复：使用 cygpath 转换路径，或者直接用相对路径
