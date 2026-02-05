@@ -108,7 +108,7 @@ jobs:
         which ${GCC_PREFIX}-windres || { echo "windres not found!"; exit 1; }
         ${GCC_PREFIX}-gcc --version | head -2
         
-        cd libxml2-2.9.2
+        cd libxml2-2.9.3
         
         echo "=== Copying custom Makefile ==="
         cp ${{ github.workspace }}/.github/workflows/libxml2-minimal.mingw win32/Makefile.mingw
