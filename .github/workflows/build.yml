@@ -95,208 +95,46 @@ jobs:
 
     - name: Configure and Build Minimal libxml2
       shell: msys2 {0}
-      env:
-        WINLIBS_BIN: ${{ steps.setup_toolchain.outputs.winlibs_path }}
-        GCC_PREFIX: ${{ steps.setup_toolchain.outputs.gcc_prefix }}
       run: |
-        # 设置工具链路径
+        export WINLIBS_BIN="${{ steps.setup_toolchain.outputs.winlibs_path }}"
+        export GCC_PREFIX="${{ steps.setup_toolchain.outputs.gcc_prefix }}"
+        
         WINLIBS_MSYS=$(cygpath -u "$WINLIBS_BIN")
         export PATH="$WINLIBS_MSYS:$PATH"
         
-        # 验证编译器
         echo "=== Compiler Check ==="
         which ${GCC_PREFIX}-gcc || { echo "GCC not found!"; exit 1; }
         which ar || { echo "AR not found!"; exit 1; }
-        which windres || { echo "windres not found!"; exit 1; }
-        
+        which ${GCC_PREFIX}-windres || { echo "windres not found!"; exit 1; }
         ${GCC_PREFIX}-gcc --version | head -2
         
-        # 进入 libxml2 目录
-        cd libxml2-2.9.3
+        cd libxml2-2.9.2
         
-        echo "=== Original Makefile.mingw backup ==="
-        cp win32/Makefile.mingw win32/Makefile.mingw.orig
+        echo "=== Copying custom Makefile ==="
+        cp ${{ github.workspace }}/.github/workflows/libxml2-minimal.mingw win32/Makefile.mingw
         
-        # 创建最小化配置的 Makefile.mingw 覆盖
-        # 方案B：保留 Reader API (xmlreader.h + xpath.h 类型定义)，但禁用 XPath 查询引擎
-        cat > win32/Makefile.mingw << 'MAKEFILE_EOF'
-        # Minimal libxml2 Makefile for MinGW - Scheme B: Reader API enabled, XPath query disabled
-        # Streaming XML reader available, no network, no XPath expression evaluation
-        
-        CC = $(GCC_PREFIX)-gcc
-        AR = ar
-        WINDRES = windres
-        CFLAGS = -O2 -Wall -DWIN32 -D_WINDOWS -D_MBCS -D_LIB $(EXTRA_FLAGS)
-        
-        # 核心目录
-        SRCDIR = ..
-        W32DIR = $(SRCDIR)/win32
-        
-        # 源文件列表 - 包含 xmlreader.c 和 xpath.c (类型定义需要)，但禁用 XPath 编译
-        # 注意：xpath.c 包含在源文件中，但我们会用宏禁用其功能代码
-        BASE_OBJS = \
-        	SAX.o \
-        	entities.o \
-        	encoding.o \
-        	error.o \
-        	parser.o \
-        	parserInternals.o \
-        	xmlIO.o \
-        	globals.o \
-        	hash.o \
-        	list.o \
-        	xmlmemory.o \
-        	uri.o \
-        	valid.o \
-        	xlink.o \
-        	HTMLparser.o \
-        	HTMLtree.o \
-        	debugXML.o \
-        	tree.o \
-        	dict.o \
-        	xmlstring.o \
-        	xmlregexp.o \
-        	xmlunicode.o \
-        	xmlreader.o \
-        	relaxng.o \
-        	xmlwriter.o \
-        	legacy.o \
-        	chvalid.o \
-        	xpath.o \
-        	xpointer.o
-        
-        # 平台相关
-        W32_OBJS = \
-        	$(W32DIR)/libxml2.res
-        
-        OBJS = $(BASE_OBJS) $(W32_OBJS)
-        
-        # 静态库目标
-        STATICLIB = libxml2.a
-        
-        # 包含路径
-        INCS = -I$(SRCDIR)/include -I$(W32DIR)
-        
-        # 基础预处理器定义
-        DEFINES = \
-        	-DLIBXML_STATIC \
-        	-DHAVE_CTYPE_H \
-        	-DHAVE_STDLIB_H \
-        	-DHAVE_MALLOC_H \
-        	-DHAVE_TIME_H \
-        	-DHAVE_FCNTL_H \
-        	-DHAVE_MATH_H \
-        	-DHAVE_STAT_H \
-        	-DHAVE__STAT \
-        	-DHAVE__STATI64 \
-        	-DHAVE__FSTATI64 \
-        	-DHAVE_VSNPRINTF \
-        	-DHAVE__VSNPRINTF \
-        	-DHAVE_SNPRINTF \
-        	-DHAVE_STRICMP \
-        	-DHAVE_STRDUP \
-        	-DHAVE_STRNDUP \
-        	-DHAVE_STRERROR \
-        	-DHAVE_FINITE \
-        	-DHAVE_ISNAN \
-        	-DHAVE_ISINF \
-        	-DHAVE_LOCALTIME \
-        	-DHAVE_GMTIME \
-        	-DHAVE_GETTIMEOFDAY \
-        	-DHAVE_FTIME \
-        	-DHAVE_TIME \
-        	-DHAVE_RAND \
-        	-DHAVE_SRAND \
-        	-DHAVE_GETENV \
-        	-DHAVE_PUTENV \
-        	-DHAVE_UNLINK \
-        	-DWITHOUT_TRIO \
-        	-D_CRT_SECURE_NO_DEPRECATE \
-        	-D_CRT_NONSTDC_NO_DEPRECATE
-        
-        # 关键：禁用网络和不必要的功能，但保留 Reader 和 XPath 类型定义
-        # 注意：没有 -DWITHOUT_XPATH，因为 xmlreader 需要 xpath.h 的类型定义
-        # 但我们通过 -DLIBXML_READER_ENABLED 确保 Reader 编译，同时禁用 XPath 表达式求值
-        CFLAGS += $(DEFINES) \
-        	-DWITHOUT_HTTP \
-        	-DWITHOUT_FTP \
-        	-DWITHOUT_C14N \
-        	-DWITHOUT_CATALOG \
-        	-DWITHOUT_DOCB \
-        	-DWITHOUT_EXPR \
-        	-DWITHOUT_ICONV \
-        	-DWITHOUT_ICU \
-        	-DWITHOUT_ISO8859X \
-        	-DWITHOUT_PATTERN \
-        	-DWITHOUT_PUSH \
-        	-DWITHOUT_PYTHON \
-        	-DWITHOUT_REGEXPS \
-        	-DWITHOUT_SCHEMAS \
-        	-DWITHOUT_SCHEMATRON \
-        	-DWITHOUT_THREADS \
-        	-DWITHOUT_THREAD_ALLOC \
-        	-DWITHOUT_XINCLUDE \
-        	-DWITHOUT_XPTR \
-        	-DWITHOUT_MODULES \
-        	-DWITHOUT_WRITER \
-        	-DWITHOUT_ZLIB \
-        	-DWITHOUT_LZMA \
-        	-DLIBXML_READER_ENABLED
-        
-        .SUFFIXES: .c .o
-        
-        .c.o:
-        	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
-        
-        all: $(STATICLIB)
-        
-        $(STATICLIB): $(OBJS)
-        	$(AR) rcs $@ $(OBJS)
-        
-        $(W32DIR)/libxml2.res: $(W32DIR)/libxml2.rc
-        	$(WINDRES) $< -O coff -o $@
-        
-        clean:
-        	rm -f $(OBJS) $(STATICLIB) *.o
-        
-        install: $(STATICLIB)
-        	mkdir -p $(PREFIX)/lib $(PREFIX)/include/libxml
-        	cp $(STATICLIB) $(PREFIX)/lib/
-        	cp $(SRCDIR)/include/libxml/*.h $(PREFIX)/include/libxml/
-        MAKEFILE_EOF
-        
-        echo "=== Modified Makefile.mingw created (Scheme B: Reader enabled) ==="
-        
-        # 进入 win32 目录编译
         cd win32
         
-        # 设置编译参数
-        export GCC_PREFIX="${GCC_PREFIX}"
         export EXTRA_FLAGS="${{ matrix.extra_flags }} -DNDEBUG"
         export PREFIX=$(cygpath -u "$PWD/../install")
         
-        echo "=== Building minimal libxml2 with Reader support ==="
+        echo "=== Building ==="
         make clean 2>/dev/null || true
-        make -f Makefile.mingw -j$(nproc) VERBOSE=1
+        make -j$(nproc)
         
-        # 检查生成的库
         echo "=== Build output ==="
-        ls -lh *.a 2>/dev/null || echo "No .a files found"
-        ls -lh libxml2* 2>/dev/null || true
+        ls -lh *.a
         
-        # 安装到本地目录
         mkdir -p ../install/lib ../install/include/libxml
-        cp libxml2.a ../install/lib/ || cp *.a ../install/lib/ || echo "No library to copy"
+        cp libxml2.a ../install/lib/
         
-        # 复制头文件（方案B：保留 xmlreader.h 和 xpath.h，但删除其他网络相关头文件）
         cd ..
         cp include/libxml/*.h install/include/libxml/
         
-        # 删除网络相关的头文件（保留 xpath.h 和 xmlreader.h！）
         rm -f install/include/libxml/nanoftp.h
         rm -f install/include/libxml/nanohttp.h
         rm -f install/include/libxml/catalog.h
-        rm -f install/include/libxml/xpointer.h      # 可以删除，Reader 不直接依赖
+        rm -f install/include/libxml/xpointer.h
         rm -f install/include/libxml/schemasInternals.h
         rm -f install/include/libxml/xmlschemas.h
         rm -f install/include/libxml/xmlschemastypes.h
@@ -305,6 +143,7 @@ jobs:
         rm -f install/include/libxml/xmlwriter.h
         rm -f install/include/libxml/c14n.h
         rm -f install/include/libxml/xinclude.h
+        
         
         # 方案B：保留 xmlreader.h 和 xpath.h（xpath.h 提供 xmlreader 需要的类型）
         # 注意：不删除 xpath.h 和 xmlreader.h
