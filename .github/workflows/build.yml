@@ -91,7 +91,7 @@ jobs:
         ls -la
         find . -maxdepth 2 -type d -name "libxml2*" | head -5
 
-        - name: Configure and Build Minimal libxml2
+    - name: Configure and Build Minimal libxml2
       shell: msys2 {0}
       run: |
         export WINLIBS_BIN="${{ steps.setup_toolchain.outputs.winlibs_path }}"
@@ -144,7 +144,6 @@ jobs:
         rm -f install/include/libxml/c14n.h
         rm -f install/include/libxml/xinclude.h
         
-        
         echo "=== Installed files ==="
         find install -type f | head -20
 
@@ -173,47 +172,42 @@ jobs:
           Copy-Item "$includeSource\*" -Destination "$pkgName\" -Recurse -Force
         }
         
-        $configInfo = @"
-Minimal libxml2 Configuration - Scheme B (Reader API Enabled)
-
-Compile Options:
-- Version: 2.9.2
-- Compiler: MinGW-w64 GCC 9.3.0 (SJLJ)
-- Architecture: ${{ matrix.arch }}
-
-Disabled Features:
-- HTTP/FTP network support
-- XML Schema/RelaxNG validation
-- XInclude file inclusion
-- Canonical XML (C14N)
-- XML Catalog support
-- XML Writer API
-- XPath expression evaluation (headers only)
-- XPointer
-- Regular expression support
-- Thread support
-- Dynamic module loading
-- Zlib/LZMA compression
-
-Enabled Core Features:
-- XmlTextReader (streaming cursor API)
-- XML/SAX2 parser
-- DOM Tree operations
-- Local file I/O
-- Character encoding conversion
-- HTML parser (simplified)
-- Basic DTD validation
-
-Link Options:
--lxml2 -lws2_32 -luser32
-"@
+         使用普通字符串，避免 here-string 缩进问题
+        $configInfo = "Minimal libxml2 Configuration - Scheme B (Reader API Enabled)`n`n" +
+        "Compile Options:`n" +
+        "- Version: 2.9.2`n" +
+        "- Compiler: MinGW-w64 GCC 9.3.0 (SJLJ)`n" +
+        "- Architecture: ${{ matrix.arch }}`n`n" +
+        "Disabled Features:`n" +
+        "- HTTP/FTP network support`n" +
+        "- XML Schema/RelaxNG validation`n" +
+        "- XInclude file inclusion`n" +
+        "- Canonical XML (C14N)`n" +
+        "- XML Catalog support`n" +
+        "- XML Writer API`n" +
+        "- XPath expression evaluation (headers only)`n" +
+        "- XPointer`n" +
+        "- Regular expression support`n" +
+        "- Thread support`n" +
+        "- Dynamic module loading`n" +
+        "- Zlib/LZMA compression`n`n" +
+        "Enabled Core Features:`n" +
+        "- XmlTextReader (streaming cursor API)`n" +
+        "- XML/SAX2 parser`n" +
+        "- DOM Tree operations`n" +
+        "- Local file I/O`n" +
+        "- Character encoding conversion`n" +
+        "- HTML parser (simplified)`n" +
+        "- Basic DTD validation`n`n" +
+        "Link Options:`n" +
+        "-lxml2 -lws2_32 -luser32"
         
         $configInfo | Out-File -Encoding utf8 -FilePath "$pkgName\CONFIG.txt"
         
         $buildInfo = "Minimal libxml2 ${{ env.LIBXML_VERSION }} ${{ matrix.arch }}`n" +
-                     "Compiler: MinGW-w64 GCC 9.3.0 (SJLJ)`n" +
-                     "Build Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')`n" +
-                     "Features: XML Reader (streaming), DOM, no network"
+        "Compiler: MinGW-w64 GCC 9.3.0 (SJLJ)`n" +
+        "Build Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')`n" +
+        "Features: XML Reader (streaming), DOM, no network"
         $buildInfo | Out-File -Encoding utf8 -FilePath "$pkgName\BUILD_INFO.txt"
         
         Write-Host "=== Package Contents ==="
@@ -221,7 +215,17 @@ Link Options:
         
         7z a "${pkgName}.7z" "$pkgName\" -mx=9
         Compress-Archive -Path "$pkgName" -DestinationPath "${pkgName}.zip" -CompressionLevel Optimal
-
+        
+        $configInfo | Out-File -Encoding utf8 -FilePath "$pkgName\CONFIG.txt"
+        
+        $buildInfo = "Minimal libxml2 ${{ env.LIBXML_VERSION }} ${{ matrix.arch }}`nCompiler: MinGW-w64 GCC 9.3.0 (SJLJ)`nBuild Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')`nFeatures: XML Reader (streaming), DOM, no network"
+        $buildInfo | Out-File -Encoding utf8 -FilePath "$pkgName\BUILD_INFO.txt"
+        
+        Write-Host "=== Package Contents ==="
+        Get-ChildItem "$pkgName" -Recurse | Select-Object FullName, Length
+        
+        7z a "${pkgName}.7z" "$pkgName\" -mx=9
+        Compress-Archive -Path "$pkgName" -DestinationPath "${pkgName}.zip" -CompressionLevel Optimal
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
